@@ -1,0 +1,99 @@
+version: '3'
+services:
+  php:
+    build:
+      context: php
+      dockerfile: Dockerfile
+      args:
+        - VERSION_PHP=php:8.2-fpm
+    volumes:
+      - './app:/var/www/html'
+      - './php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini'
+    expose:
+      - 9000
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - './app:/var/www/html'
+      - './nginx/default.conf:/etc/nginx/conf.d/default.conf'
+      - './nginx/nginx.conf:/etc/nginx/nginx.conf'
+    ports:
+      - 80:80
+      - 443:443
+
+#  mysql:
+#    image: mysql:5.7.37
+#    restart: "no"
+#    hostname: mysql
+#    volumes:
+#      - './mysql/my.cnf:/etc/mysql/my.cnf'
+#      - './mysql:/home'
+#    ports:
+#      - "3306:3306"
+#    environment:
+#      - MYSQL_ROOT_PASSWORD=root
+#      - MYSQL_ROOT_HOST= "0.0.0.0"
+#      - MYSQL_DATABASE=database
+#      - MYSQL_USER=maksarovd
+#      - MYSQL_PASSWORD=1
+
+  mariadb:
+    image: mariadb:latest
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: database
+      MARIADB_USER: maksarovd
+      MARIADB_PASSWORD: 1
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+#  redis:
+#    image: redis:6.2.6
+#    hostname: redis
+#    volumes:
+#      - './app:/var/www/html'
+#    ports:
+#      - 6379:6379
+
+  #mongosh --host localhost --port 27017
+  #create own users @see mongodb/init-mongo.js
+#  mongodb:
+#    image: mongo:latest
+#    restart: always
+#    ports:
+#      - 27017:27017
+#    volumes:
+#      - mongo_data:/data/db
+#      - ./mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+#    networks:
+#      - mongo_net
+
+  #psql -U maksarovd -d database -h localhost -W
+  #sudo docker-compose down --volumes
+  postgres:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres:/home
+    environment:
+      - POSTGRES_PASSWORD=1
+      - POSTGRES_USER=maksarovd
+      - POSTGRES_DB=database
+    networks:
+      - postgres_net
+
+volumes:
+#  mongo_data:
+  postgres_data:
+  mariadb_data:
+    driver: local
+
+networks:
+#  mongo_net:
+  postgres_net:
